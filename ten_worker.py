@@ -25,8 +25,8 @@ EVALUATE_SIZE = 3
 
 BATCH_SIZE = 15000
 TRAIN_CNT = 1000
-REVERSE_RUN = False
-INPUT_DATE_STR = None#'20200902'
+REVERSE_RUN = True
+INPUT_DATE_STR = None#'20200802'
 
 
 def init_weights(shape):
@@ -237,7 +237,6 @@ def run(expect):
             if analyzed is None:
                 logging.info('analyzed is None')
                 continue
-            db = DBManager()
             volume = db.get_volume(analyzed["code"], target_at)    
             db.insert_result(expect, analyzed["code"], target_at, analyzed["per"], EVALUATE_SIZE, volume)        
 
