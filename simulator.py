@@ -30,9 +30,9 @@ def select_distinct_stocks():
 def get_potential_datas(limit_rate, code):
     cursor = connection.cursor()
     query = """
-    SELECT ds.name, f.type, f.code, f.analyze_at, f.potential, f.volume , f.percent, f.evaluate, d.close
+    SELECT ds.name, f.type, f.code, f.analyze_at, f.potential, f.volume , f.percent, f.evaluate, ds.close
     FROM data.forecast f, data.daily_stock ds 
-    WHERE f.type = 3 AND ds.code = f.code AND potential > %s AND f.code = %s 
+    WHERE f.type = 3 AND ds.code = f.code AND f.potential > %s AND f.code = %s 
     group by f.id 
     ORDER BY f.analyze_at, f.code ASC
     """
@@ -58,16 +58,10 @@ def is_compare_chain_minus(code, analyze_at, day_cnt):
 
 
 def forecast_result(code, name):
-    foreacast_rate = 100
     datas = get_potential_datas(LIMIT_PER, code)
     for data in datas:
         if is_compare_chain_minus(code=code, analyze_at=data.get('analyze_at'), day_cnt=1):
-            result_msg = '[' + code[1:] + '][' + name + ']'         
-            percent = data.get('percent')
-            if percent is not None :
-                foreacast_rate = foreacast_rate + (foreacast_rate * percent)
-                ratio = round(foreacast_rate,  1)
-                result_msg += ('[' + str(ratio) + ']')
+            result_msg = '[' + code[1:] + '][' + name + ']' 
     return result_msg
 
 def get_code(param):
@@ -106,9 +100,9 @@ def get_max_target_at():
 def get_potential_data_results(target_at, limit_rate):
     cursor = connection.cursor()
     query = """
-            SELECT ds.name, f.type, f.code, f.analyze_at, f.potential, f.volume , f.percent, f.evaluate 
-            FROM data.forecast f, data.daily_stock ds
-            WHERE f.type = 3 AND ds.code = f.code AND analyze_at > %s and potential > %s 
+            SELECT f.code, f.analyze_at, f.potential, f.percent, f.evaluate
+            FROM data.forecast f
+            WHERE f.type = 3 AND f.analyze_at > %s and f.potential > %s 
             group by f.id ORDER BY f.analyze_at, f.code ASC
             """
     cursor.execute(query, (target_at, str(limit_rate)))
@@ -117,12 +111,19 @@ def get_potential_data_results(target_at, limit_rate):
 
 def get_potential(target_at, chan_minus, limit_rate):
     datas = get_potential_data_results(target_at, limit_rate)
-    potens = list()
+    poten_list = list()
+    cursor = connection.cursor()
     for data in datas:
         compare = is_compare_chain_minus(data.get('code'), data.get('analyze_at'), chan_minus)
         if compare:
-            potens.append(data)
-    return potens
+            poten_list.append(data)
+    for poten in poten_list:
+        cursor.execute("select close, volume from daily_stock where code = %s order by id desc limit 1", 
+                    (poten.get('code')))
+        res = cursor.fetchone()
+        poten['close'] = res.get('close')
+        poten['volume'] = res.get('volume')
+    return poten_list
 
 def append_msg(append_list) :
     result = ''
@@ -130,6 +131,11 @@ def append_msg(append_list) :
         if append is not None:
             result += '[' + str(append) + ']'
     return result + '\n'
+
+def drop_number(number):
+    if (number / 1000) > 0:
+        return str(number)[:-3] + 'k'
+    return str(number)
 
 def print_potentials(datas):
     msg = ''
@@ -139,11 +145,11 @@ def print_potentials(datas):
         if date not in dates:
             dates.append(date)            
             msg += append_msg([date])
-        msg += append_msg([data.get('percent'), 
-                        simulator(data.get('code')),
-                        data.get('type'), 
-                        data.get('potential'), 
-                        data.get('volume')])
+        msg += append_msg([simulator(data.get('code')),
+                        data.get('percent'),
+                        str(int(data.get('potential') * 100)) + '%', 
+                        data.get('close'),
+                        drop_number(data.get('volume'))])
     print(msg)
     return msg
 
