@@ -68,7 +68,7 @@ class Store:
                     "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (code, s_date, open, high, low, close, volume, hold_foreign, st_purchase_inst)
                 )
-                print('saved stocks [', i ,'] code ', code, ' date', date)
+                print('saved stocks code ', code, ' date', date)
         self.commit()
 
     def get_possible_store_date(self, code):

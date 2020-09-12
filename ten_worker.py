@@ -227,7 +227,7 @@ def run(expect):
         codes = db.get_codes()
         for idx in range(len(codes)) :
             code = codes[idx]
-            logging.info (idx , '/' ,len(codes))
+            print(idx , '/' ,len(codes))
             if db.check_daily_target(target_at) is False:
                 logging.info('non exist stock data')
                 continue
