@@ -243,6 +243,14 @@ def run(expect):
         print('done')
 
 
+import sys
+
+if len(sys.argv) > 1:
+    REVERSE_RUN = True
+else :
+    REVERSE_RUN = False
+    
+print('REVERSE_RUN', REVERSE_RUN)
 
 expects = [3] ##open, high, low, close, volume, hold_foreign, st_purchase_inst
 for expect in expects:
