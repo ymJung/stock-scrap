@@ -157,7 +157,7 @@ def print_potentials(datas):
 
 
 def send_telegram(msg):
-    updater = Updater(TOKEN)
+    updater = Updater(TOKEN, use_context=true)
     updater.bot.sendMessage(chat_id=VALID_USER, text=msg)
 
 
